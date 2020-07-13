@@ -45,6 +45,7 @@ $WIN64 WIN64_CC=x86_64-w64-mingw32-gcc
 $WIN64 WIN64_C_FLAGS=-Wall -std=c99
 $WIN64 WIN64_L_FLAGS=-static
 $WIN64
+$AARCH64 ASM_FUNCTION_OBJ_FILES_AARCH64 = neon128_functions.o
 # targets
 
 default: version linux
@@ -58,6 +59,8 @@ $CUDA cuda: FIRESTARTER_CUDA
 $CUDA
 $WIN64 win64: FIRESTARTER_win64.exe
 $WIN64
+$AARCH64 aarch64: FIRESTARTER_AARCH64
+$AARCH64
 $ALL $TEMPLATE Makefile.target_all(dest,version.targets)
 $ALL
 FIRESTARTER: generic.o x86.o main.o init_functions.o work.o x86.o watchdog.o help.o ${ASM_FUNCTION_OBJ_FILES}
@@ -69,6 +72,8 @@ $CUDA
 $WIN64 FIRESTARTER_win64.exe: main_win64.o x86_win64.o init_functions_win64.o help_win64.o ${ASM_FUNCTION_OBJ_FILES_WIN}
 $WIN64 $TAB ${WIN64_CC} ${OPT_STD} ${WIN64_C_FLAGS} -o FIRESTARTER_win64.exe main_win64.o x86_win64.o init_functions_win64.o help_win64.o ${ASM_FUNCTION_OBJ_FILES_WIN} ${WIN64_L_FLAGS}
 $WIN64
+$AARCH64 FIRESTARTER_AARCH64: generic.o aarch64.o main.o init_functions.o work.o aarch64.o watchdog.o help.o ${ASM_FUNCTION_OBJ_FILES_AARCH64}
+$AARCH64 $TAB ${LINUX_CC} -o FIRESTARTER_AARCH64 generic.o aarch64.o main.o init_functions.o work.o watchdog.o help.o ${ASM_FUNCTION_OBJ_FILES_AARCH64} ${LINUX_L_FLAGS} ${LINUX_L_FLAGS_STATIC}
 generic.o: generic.c cpu.h
 $TAB ${LINUX_CC} ${OPT_STD} ${LINUX_C_FLAGS} -c generic.c
 
@@ -90,6 +95,12 @@ $TAB ${LINUX_CC} ${OPT_STD} ${LINUX_C_FLAGS} -c watchdog.c
 help.o: help.c help.h
 $TAB ${LINUX_CC} ${OPT_STD} ${LINUX_C_FLAGS} -c help.c
 
+$AARCH64 aarch64.o: aarch64.c cpu.h
+$AARCH64 $TAB ${LINUX_CC} ${OPT_STD} ${LINUX_C_FLAGS} -c aarch64.c
+$AARCH64
+$AARCH64 neon128_function.o: neon128_functions.c cpu.h
+$AARCH64 $TAB ${LINUX_CC} ${OPT_STD} ${LINUX_C_FLAGS} -c neon128_functions.c
+$AARCH64
 $WIN64 main_win64.o: main_win64.c work.h cpu.h
 $WIN64 $TAB ${WIN64_CC} ${OPT_STD} ${WIN64_C_FLAGS} -c main_win64.c
 $WIN64
@@ -118,3 +129,14 @@ $TAB rm -f *.o
 $TAB rm -f FIRESTARTER
 $CUDA $TAB rm -f FIRESTARTER_CUDA
 $WIN64 $TAB rm -f FIRESTARTER_win64.exe
+$AARCH64 $TAB rm -f FIRESTART_AARCH64
+distclean:
+$TAB rm -f *.a
+$TAB rm -f *.o
+$TAB rm -f *.c
+$TAB rm -f *.h
+$TAB rm -f INSTALL Makefile README
+$TAB rm -f FIRESTARTER
+$CUDA $TAB rm -f FIRESTARTER_CUDA
+$WIN64 $TAB rm -f FIRESTARTER_win64.exe
+$AARCH64 $TAB rm -f FIRESTART_AARCH64

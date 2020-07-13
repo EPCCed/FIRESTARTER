@@ -39,6 +39,7 @@ def src_obj_files(file,templates,version):
         file.write("ASM_FUNCTION_SRC_FILES_WIN="+src_files_win+"\n")
         file.write("ASM_FUNCTION_OBJ_FILES_WIN="+obj_files_win+"\n")
 
+
 def template_rules(file,templates,version):
     for each in templates:
         flags = ''

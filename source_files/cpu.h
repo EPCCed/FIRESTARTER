@@ -60,6 +60,11 @@
  #define __ARCH_UNKNOWN
 #endif
 
+$AARCH64 #if (defined (__aarch64__))
+$AARCH64 #undef __ARCH_UNKNOWN
+$AARCH64 #define __ARCH_AARCH64
+$AARCH64 #endif
+
 /* cpu-feature definition */
 #define X86_64       0x00000001
 #define FPU          0x00000002

@@ -19,44 +19,7 @@
  * Contact: daniel.hackenberg@tu-dresden.de
  *****************************************************************************/
 
-#ifndef __FIRESTARTER__WORK_H
-#define __FIRESTARTER__WORK_H
+#include "work.h"
 
-#include "firestarter_global.h"
-$AARCH64 #ifndef __aarch64__
-#include <mm_malloc.h>
-$AARCH64 #endif
-
-/*
- * function definitions
- */
-$TEMPLATE work_h.function_definitions(dest,architectures)
-
-/*
- * function that does the measurement
- */
-extern void _work(volatile mydata_t* data, unsigned long long *high);
-
-/*
- * loop executed by all threads, except the master thread
- */
-extern void *thread(void *threaddata);
-
-/*
- * init functions
- */
-$TEMPLATE work_h.init_functions(dest,architectures)
-
-/*
- * stress test functions
- */
-$TEMPLATE work_h.stress_test_functions(dest,architectures)
-
-/*
- * low load function
- */
-int low_load_function(unsigned long long addrHigh,unsigned int period) __attribute__((noinline));
-int low_load_function(unsigned long long addrHigh,unsigned int period);
-
-#endif
+$TEMPLATE neon128_functions_c.work_functions(dest,architectures,version)
 

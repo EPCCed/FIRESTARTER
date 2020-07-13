@@ -67,9 +67,17 @@ $$                  "cpuid;" ::: "eax", "ebx", "ecx", "edx");
 $$    
 $$    DM: removed cpuid as mfence is sufficient to ensure global visibility
 $$    
-     *loadvar = value;
+
+  *loadvar = value;
+$AARCH64 #ifndef __aarch64__
      __asm__ __volatile__ ("mfence;");
-}
+  
+    }
+$AARCH64 #else
+$AARCH64 __asm__ __volatile__ ("dmb ish");
+$AARCH64   }
+$AARCH64 #endif
+
 
 static pthread_t watchdog_thread;
 

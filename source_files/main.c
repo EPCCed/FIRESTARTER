@@ -132,10 +132,16 @@ static void *init()
     if((NUM_THREADS > mdp->cpuinfo->num_cpus) || (NUM_THREADS == 0)){
         NUM_THREADS = mdp->cpuinfo->num_cpus;
     }
-
+$AARCH64
+$AARCH64 #ifndef __aarch64__
     threads = _mm_malloc(NUM_THREADS * sizeof(pthread_t), ALIGNMENT);
     mdp->thread_comm = _mm_malloc(NUM_THREADS * sizeof(int), ALIGNMENT);
     mdp->threaddata = _mm_malloc(NUM_THREADS * sizeof(threaddata_t), ALIGNMENT);
+$AARCH64 #else
+$AARCH64    int zz = posix_memalign((void**)&threads, ALIGNMENT, NUM_THREADS*sizeof(pthread_t));
+$AARCH64    zz = posix_memalign((void**)&(mdp->thread_comm), ALIGNMENT, NUM_THREADS * sizeof(int));
+$AARCH64    zz = posix_memalign((void**)&(mdp->threaddata), ALIGNMENT, NUM_THREADS * sizeof(threaddata_t));
+$AARCH64 #endif
     mdp->num_threads = NUM_THREADS;
     if((threads == NULL) || (mdp->thread_comm == NULL) || (mdp->threaddata == NULL)){
         fprintf(stderr, "Error: Allocation of structure mydata_t failed\n");
@@ -247,8 +253,12 @@ static void evaluate_environment()
     unsigned int j = 0;
 #endif
     char arch[16];
-
+$AARCH64 #ifndef __aarch64__
     cpuinfo = (cpu_info_t *) _mm_malloc(sizeof(cpu_info_t), 64);
+$AARCH64 #else
+$AARCH64    int zz = posix_memalign((void**)&(cpuinfo), ALIGNMENT, NUM_THREADS * sizeof(cpu_info_t));
+$AARCH64 #endif
+
     init_cpuinfo(cpuinfo, verbose);
 
     if((NUM_THREADS>0) && (NUM_THREADS > cpuinfo->num_cpus)){
@@ -372,7 +382,13 @@ static void evaluate_environment()
     }
 #endif
 
-    mdp = (mydata_t *) _mm_malloc(sizeof(mydata_t), ALIGNMENT);
+$AARCH64 #ifndef __aarch64__
+     mdp = (mydata_t *) _mm_malloc(sizeof(mydata_t), ALIGNMENT);
+$AARCH64 #else
+$AARCH64    zz = posix_memalign((void**)&(mdp), ALIGNMENT, NUM_THREADS * sizeof(mydata_t));
+$AARCH64 #endif
+
+
     if (mdp == 0) {
         fprintf(stderr,"Error: Allocation of structure mydata_t failed (1)\n");
         fflush(stderr);

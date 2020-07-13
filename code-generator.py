@@ -38,12 +38,13 @@ def usage():
     print("-c|--enable-cuda     enable CUDA support")
     print("-m|--enable-mac      enable Mac O/S support")
     print("-w|--enable-win      enable windows support")
+    print("-a|--enable-arm      enable ARM support")
     print("If one of the --enable-* arguments is used it overrides all the feature")
     print("selections in the config file, i.e., if one feature is added on the command line,")
     print("features that are enabled by default have to be added to the command as well.")
 
 try:
-    opts,args = getopt.getopt(sys.argv[1:], "hvcmw", ["help","verbose","enable-cuda","enable-mac","enable-win"])
+    opts,args = getopt.getopt(sys.argv[1:], "hvcmwa", ["help","verbose","enable-cuda","enable-mac","enable-win","enable-arm"])
 except getopt.GetoptError as err:
     print(str(err)) # will print something like "option -a not recognized"
     usage()
@@ -66,7 +67,7 @@ templates = []
 families = []
 verbose = False
 feature_override = False
-features = [False,False,False]
+features = [False,False,False,False]
 date = datetime.datetime.now()
 
 dirname = os.path.dirname(os.path.realpath(__file__))+'/'
@@ -87,6 +88,9 @@ for o, a in opts:
     elif o in ("-m", "--enable-mac"):
         feature_override = True
         features[2] = True
+    elif o in ("-a", "--enable-arm"):
+        feature_override = True
+        features[3] = True
     else:
         assert False, "unhandled option"
 
@@ -107,20 +111,26 @@ for each in cfg.sections():
             version.enable_cuda = int(cfg.get(version.name,'enable_cuda').strip())
             version.enable_win64 = int(cfg.get(version.name,'enable_win64').strip())
             version.enable_mac = int(cfg.get(version.name,'enable_mac').strip())
+            version.enable_arm = int(cfg.get(version.name,'enable_arm').strip())
         else:
             version.enable_cuda = 0
             version.enable_win64 = 0
             version.enable_mac = 0
+            version.enable_arm = 0
             if features[0] == True:
                 version.enable_cuda = 1
             if features[1] == True:
                 version.enable_win64 = 1
             if features[2] == True:
                 version.enable_mac = 1
+            if features[3] == True:
+                version.enable_arm = 1                    
         if version.enable_cuda:
             version.targets = version.targets+' cuda'
         if version.enable_win64:
             version.targets = version.targets+' win64'
+        if version.enable_arm:
+            version.targets = version.targets+' aarch64'
         # enabling mac support does not result in additional make target
     elif cfg.has_option(each,'template'):
         templates.append( template(each) )
@@ -172,6 +182,7 @@ if verbose == True:
     print("CUDA support:"+str(version.enable_cuda))
     print("Win64 support:"+str(version.enable_win64))
     print("Mac O/S support:"+str(version.enable_mac))
+    print("ARM support:"+str(version.enable_arm))
     print("\ngenerating code:")
 
 # list of files from generator root directory that are copied to build directory
@@ -208,6 +219,7 @@ files.append('source_files/work.c')
 files.append('source_files/work.h')
 files.append('source_files/x86.c')
 
+
 # add GPU files if CUDA support is enabled
 if version.enable_cuda == 1:
     files.append('source_files/gpu.h')
@@ -217,6 +229,10 @@ if version.enable_cuda == 1:
 if version.enable_win64 == 1:
     files.append('source_files/main_win64.c')
     files.append('source_files/x86_win64.c')
+
+if version.enable_arm == 1:
+    files.remove('source_files/x86.c')
+    files.append('source_files/aarch64.c')
 
 # generate source code from files in source_files directory, apply patches defined in templates directory
 for file in files:
@@ -267,7 +283,12 @@ for file in files:
                         line = line.replace("$STATIC ","").replace("$STATIC","")
                     else:
                         line = ""
-                # special condition for Makefiles with multiple targets (at least one option with an extra make target is enabled)
+                elif (line.find("$AARCH64") == 0):
+                    if version.enable_arm == 1:
+                        line = line.replace("$AARCH64 ","").replace("$AARCH64","")
+                    else:
+                        line = ""
+                        # special condition for Makefiles with multiple targets (at least one option with an extra make target is enabled)
                 elif (line.find("$ALL") == 0):
                     if version.targets is not 'linux':
                         line = line.replace("$ALL ","").replace("$ALL","")

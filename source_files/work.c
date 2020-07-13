@@ -51,6 +51,7 @@ int low_load_function(volatile unsigned long long addrHigh, unsigned int period)
     int nap;
 
     nap = period / 100;
+$AARCH64 #ifndef __aarch64__    
     __asm__ __volatile__ ("mfence;"
                   "cpuid;" ::: "eax", "ebx", "ecx", "edx");
     while(*((volatile unsigned long long *)addrHigh) == LOAD_LOW){
@@ -60,6 +61,14 @@ int low_load_function(volatile unsigned long long addrHigh, unsigned int period)
         __asm__ __volatile__ ("mfence;"
                       "cpuid;" ::: "eax", "ebx", "ecx", "edx");
     }
+$AARCH64 #else
+$AARCH64 __asm__ __volatile__ ("dmb ish");
+$AARCH64   while(*((volatile unsigned long long *)addrHigh) == LOAD_LOW){
+$AARCH64     __asm__ __volatile__ ("dmb ish");
+$AARCH64     usleep(nap);
+$AARCH64       __asm__ __volatile__ ("dmb ish");
+$AARCH64   } 
+$AARCH64 #endif
 
     return 0;
 }
@@ -109,7 +118,11 @@ void *thread(void *threaddata)
 
                     /* allocate memory */
                     if(mydata->buffersizeMem){
+$AARCH64 #ifndef __aarch64__	        	      
                         mydata->bufferMem = _mm_malloc(mydata->buffersizeMem, mydata->alignment);
+$AARCH64 #else
+$AARCH64                int zz = posix_memalign((void**)&mydata->bufferMem, mydata->alignment, mydata->buffersizeMem);
+$AARCH64 #endif 
                         mydata->addrMem = (unsigned long long)(mydata->bufferMem);
                     }
                     if(mydata->bufferMem == NULL){
