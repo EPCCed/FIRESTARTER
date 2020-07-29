@@ -24,10 +24,10 @@ import sys
 from . import util
 
 def init_functions(file,architectures):
-    print "in init_functions: "
+    print("in init_functions: ")
     print architectures
     
-    isa='armv81'
+    isa='neon128'
     for each in architectures:
         for item in each.isa:
             print item
@@ -109,7 +109,8 @@ def init_functions(file,architectures):
                     file.write("}\n")
 
 def work_functions(file,architectures,version):
-    isa='armv81'
+    print("Entered wf gen")
+    isa='neon128'
 
     # register definitions
     pointer_reg     = 'rax' # do not modify (used for in/output)
