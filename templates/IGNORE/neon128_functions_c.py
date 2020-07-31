@@ -24,10 +24,10 @@ import sys
 from . import util
 
 def init_functions(file,architectures):
-    print("in init_functions: ")
+    print "in init_functions: "
     print architectures
     
-    isa='neon128'
+    isa='armv81'
     for each in architectures:
         for item in each.isa:
             print item
@@ -109,8 +109,7 @@ def init_functions(file,architectures):
                     file.write("}\n")
 
 def work_functions(file,architectures,version):
-    print("Entered wf gen")
-    isa='neon128'
+    isa='armv81'
 
     # register definitions
     pointer_reg     = 'rax' # do not modify (used for in/output)
@@ -128,23 +127,6 @@ def work_functions(file,architectures,version):
     mov_regs        = 0
     add_regs        = 14
     trans_regs      = 2
-
-    pointer_reg     = 'x0' # do not modify (used for in/output)
-    l1_addr         = 'x1' # do not modify (used for in/output)
-    l2_addr         = 'x2' # do not modify (used for in/output)
-    l3_addr         = 'x3'
-    ram_addr        = 'x4'
-    l2_count_reg    = 'x8'
-    l3_count_reg    = 'x9'
-    ram_count_reg   = 'x10'
-    temp_reg        = 'x11'
-    offset_reg      = 'x12'
-    addrHigh_reg    = 'x13'
-    iter_reg        = 'x14'
-    mov_regs        = 0
-    add_regs        = 14
-    trans_regs      = 2
-
 
     for each in architectures:
         for item in each.isa:
@@ -167,11 +149,11 @@ def work_functions(file,architectures,version):
                     file.write("{\n")
                     file.write("    if (*((unsigned long long*)threaddata->addrHigh) == 0) return EXIT_SUCCESS;\n")
                     file.write("        /* input: \n")
-                    file.write("         *   - threaddata->addrMem    -> asmSymbolicName a\n")
-                    file.write("         *   - threaddata->addrHigh   -> asmSymbolicName b\n")
-                    file.write("         *   - threaddata->iterations -> asmSymbolicName c\n")
+                    file.write("         *   - threaddata->addrMem    -> rax\n")
+                    file.write("         *   - threaddata->addrHigh   -> rbx\n")
+                    file.write("         *   - threaddata->iterations -> rcx\n")
                     file.write("         * output: \n")
-                    file.write("         *   - asmSymbolicName a -> threaddata->iterations\n")
+                    file.write("         *   - rax -> threaddata->iterations\n")
                     file.write("         * register usage:\n")
                     file.write("         *   - {:<9} stores original pointer to buffer, used to periodically reset other pointers\n".format(pointer_reg+":"))
                     file.write("         *   - {:<9} pointer to L1 buffer\n".format(l1_addr+":"))
@@ -191,18 +173,18 @@ def work_functions(file,architectures,version):
                     # file.write("         * "+sequence+" \n")
                     file.write("         */\n")
                     file.write("        __asm__ __volatile__(\n")
-                    file.write("        \"mov %[a], %%"+pointer_reg+";\" // store start address of buffer in "+pointer_reg+"\n")
-                    file.write("        \"mov %[b], %%"+addrHigh_reg+";\" // store address of shared variable that controls load level in "+addrHigh_reg+"\n")
-                    file.write("        \"mov %[c], %%"+iter_reg+";\" // store iteration counter in "+iter_reg+"\n")
+                    file.write("        \"mov %%rax, %%"+pointer_reg+";\" // store start address of buffer in "+pointer_reg+"\n")
+                    file.write("        \"mov %%rbx, %%"+addrHigh_reg+";\" // store address of shared variable that controls load level in "+addrHigh_reg+"\n")
+                    file.write("        \"mov %%rcx, %%"+iter_reg+";\" // store iteration counter in "+iter_reg+"\n")
                     file.write("        \"mov $64, %%"+offset_reg+";\" // increment after each cache/memory access\n")
                     if add_regs > 0:
                         add_start   = 0
                         add_end     = add_regs-1
                         trans_start = add_regs
                         trans_end   = add_regs + trans_regs-1
-                        file.write("        //Initialize FP-Registers for Addition ARM Q registers\n")
+                        file.write("        //Initialize SSE-Registers for Addition\n")
                         for i in range(add_start,add_end+1):
-                            file.write("        \"mov "+str(i*32)+"(%%x0), %%q"+str(i)+";\"\n")
+                            file.write("        \"movapd "+str(i*32)+"(%%rax), %%xmm"+str(i)+";\"\n")
                     if mov_regs > 0:
                         mov_start   = 0
                         mov_end     = mov_regs - 1
@@ -406,7 +388,7 @@ def work_functions(file,architectures,version):
                     file.write("        \"jnz _work_loop_"+func_name+";\"\n")
                     file.write("        \"movq %%"+iter_reg+", %%rax;\" // restore iteration counter\n")
                     file.write("        : \"=a\" (threaddata->iterations)\n")
-                    file.write("        : [a] \"a\"(threaddata->addrMem), [b] \"b\"(threaddata->addrHigh),[c] \"c\" (threaddata->iterations)\n")
+                    file.write("        : \"a\"(threaddata->addrMem), \"b\"(threaddata->addrHigh), \"c\" (threaddata->iterations)\n")
                     file.write("        : \"%"+l3_addr+"\", \"%"+ram_addr+"\", \"%"+l2_count_reg+"\", \"%"+l3_count_reg+"\", \"%"+ram_count_reg+"\", \"%"+temp_reg+"\", \"%"+offset_reg+"\", \"%"+addrHigh_reg+"\", \"%mm0\", \"%mm1\", \"%mm2\", \"%mm3\", \"%mm4\", \"%mm5\", \"%mm6\", \"%mm7\", \"%xmm0\", \"%xmm1\", \"%xmm2\", \"%xmm3\", \"%xmm4\", \"%xmm5\", \"%xmm6\", \"%xmm7\", \"%xmm8\", \"%xmm9\", \"%xmm10\", \"%xmm11\", \"%xmm12\", \"%xmm13\", \"%xmm14\", \"%xmm15\"\n")
                     file.write("        );\n")
                     file.write("    return EXIT_SUCCESS;\n")

@@ -219,7 +219,6 @@ files.append('source_files/work.c')
 files.append('source_files/work.h')
 files.append('source_files/x86.c')
 
-
 # add GPU files if CUDA support is enabled
 if version.enable_cuda == 1:
     files.append('source_files/gpu.h')
@@ -231,8 +230,11 @@ if version.enable_win64 == 1:
     files.append('source_files/x86_win64.c')
 
 if version.enable_arm == 1:
+    print("ARM swap done")
     files.remove('source_files/x86.c')
     files.append('source_files/aarch64.c')
+
+print("files ...", files)    
 
 # generate source code from files in source_files directory, apply patches defined in templates directory
 for file in files:
@@ -299,7 +301,10 @@ for file in files:
                     line = line.replace("$TAB ","\t").replace("$TAB","\t")
                 # process templates in source files
                 elif (line.find("$TEMPLATE") == 0):
+                    #print("TEMPLATING")
+                    #print line
                     command = line.replace("$TEMPLATE ","")
+                    #print command
                     exec(command)
                     line = ""
                 else:

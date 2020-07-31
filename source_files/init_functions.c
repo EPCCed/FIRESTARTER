@@ -21,15 +21,16 @@
 
 #include "work.h"
 
-$TEMPLATE sse2_functions_c.init_functions(dest,architectures)
+/* $TEMPLATE sse2_functions_c.init_functions(dest,architectures) */
 
-$TEMPLATE avx_functions_c.init_functions(dest,architectures)
+/* $TEMPLATE avx_functions_c.init_functions(dest,architectures) */
 
-$TEMPLATE fma_functions_c.init_functions(dest,architectures)
+/* $TEMPLATE fma_functions_c.init_functions(dest,architectures) */
 
-$TEMPLATE fma4_functions_c.init_functions(dest,architectures)
+/* $TEMPLATE fma4_functions_c.init_functions(dest,architectures) */
 
-$TEMPLATE avx512_functions_c.init_functions(dest,architectures)
+/* $TEMPLATE avx512_functions_c.init_functions(dest,architectures) */
 
-$TEMPLATE zen_fma_functions_c.init_functions(dest,architectures)
+/* $TEMPLATE zen_fma_functions_c.init_functions(dest,architectures) */
 
+$TEMPLATE neon128_functions_c.init_functions(dest,architectures)
